@@ -4,14 +4,25 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 export function HealthBadge() {
+  const [mounted, setMounted] = useState(false);
   const { data, isError, isLoading } = useQuery({
     queryKey: ["health"],
     queryFn: () => api.health(),
     refetchInterval: 15_000,
     staleTime: 10_000,
   });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render on server - show empty badge to prevent hydration mismatch
+  if (!mounted) {
+    return <Badge variant="muted">—</Badge>;
+  }
 
   if (isLoading) return <Badge variant="muted">checking…</Badge>;
   if (isError || !data) return <Badge variant="destructive">offline</Badge>;

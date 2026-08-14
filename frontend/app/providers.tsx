@@ -3,10 +3,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
   const [client] = useState(
     () =>
       new QueryClient({
@@ -19,19 +18,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         },
       })
   );
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <QueryClientProvider client={client}>
-        {children}
-        <Toaster position="bottom-right" richColors />
-      </QueryClientProvider>
-    );
-  }
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange storageKey="documind-theme">

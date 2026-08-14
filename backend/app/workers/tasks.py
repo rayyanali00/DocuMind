@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
-from celery import shared_task
 from loguru import logger
 
 from app.ai.chunker import TextChunk, semantic_chunk
@@ -16,6 +15,7 @@ from app.models.file import File
 from app.pipelines.extractors import ExtractionError, extract_text
 from app.services import bm25_store, cache, file_service, vector_store
 from app.services.youtube import YouTubeError, fetch_transcript
+from app.workers.celery_app import celery_app
 
 
 def _run(coro):
@@ -24,7 +24,7 @@ def _run(coro):
 
 # ---------- File ingestion ----------
 
-@shared_task(
+@celery_app.task(
     bind=True,
     name="documind.ingest_file",
     autoretry_for=(OSError, ConnectionError),
@@ -89,7 +89,7 @@ async def _ingest_file_async(file_id: str) -> dict:
 
 # ---------- YouTube ingestion ----------
 
-@shared_task(
+@celery_app.task(
     bind=True,
     name="documind.ingest_youtube",
     autoretry_for=(ConnectionError,),
@@ -269,7 +269,7 @@ async def _index_chunks(
 
 # ---------- File lifecycle ----------
 
-@shared_task(name="documind.purge_file")
+@celery_app.task(name="documind.purge_file")
 def purge_file(file_id: str) -> dict:
     """Remove a file from vector + BM25 stores (and on-disk blob if any)."""
     try:
